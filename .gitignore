@@ -2,3 +2,6 @@
 __pycache__
 env
 *.pth
+*.sh
+main.py
+depository
