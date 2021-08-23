@@ -1,0 +1,38 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<style>
+    body {background-color: rgb(0, 30, 60);}
+    h1, h2, a, label {color: white; font-size: 3.2vw;text-align: center;}
+    img {padding: 0;
+    float: center;
+    display: inline-block;
+    margin: 0 auto;
+    width: 10%;
+    height: auto;}
+</style>
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Wellcome to Cabernet</title>
+        <link rel="icon" type="image/x-icon" href="{% static 'aicore/images/logo.ico' %}">
+    </head>
+    <body>
+        {% if request.user.is_authenticated %}
+            <h1>
+                Wellcome to Cabernet, {{request.user}}
+                [ <a href="/accounts/logout">Log out</a> ]
+            </h1>
+            <h2>
+                AI core is operating...
+                <img src="{% static 'aicore/images/loading.gif' %}"/>
+            </h2>
+        {% else %}
+            <img src="{% static 'aicore/images/logo.png' %}" style="width: 5%; display: block"/>
+            <h1>Wellcome to Cabernet, Please <a href="/accounts/login">Login</a></h1>
+        {% endif %}
+        <h1></h1>
+    </body>
+</html>
