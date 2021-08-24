@@ -23,16 +23,18 @@ def read_image(image_path, format='BGR'):
     """
     return detection_utils.read_image(image_path, format=format)
 
-def vis_prediction(background, prediction):
+def vis_prediction(background, prediction, metadata=None):
     """
     Visualize prediction with background.
     Args:
-        background (numpy.ndarray): a background image
+        background (numpy.ndarray): a background image.
         prediction (dict): a dict with detectron2 prediction.
+        metadata (UserDict): dataset metadata (e.g. )
+        
     Returns:
         a numpy array
     """
-    visualizer = Visualizer(background, scale=1, instance_mode=ColorMode.IMAGE)
+    visualizer = Visualizer(background, metadata, scale=1, instance_mode=ColorMode.IMAGE)
     out = visualizer.draw_instance_predictions(prediction["instances"].to("cpu"))
     return out.get_image()
 

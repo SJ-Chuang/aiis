@@ -17,36 +17,33 @@ class Post(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
     module = SpacingModule()
     
-    def encode_img(self, img):
+    def encode(self, img):
         img = Image.fromarray(img)
         f = io.BytesIO()
         img.save(f, format="PNG")
         content = f.getvalue()
         return base64.encodebytes(content)
     
-    def encode_array(self, **kwargs):
-        f = io.BytesIO()
-        np.savez_compressed(f, **kwargs)
-        return base64.encodebytes(f.getvalue())
-    
-    def decode_img(self, img):
-        img = base64.b64decode(img)
-        f = io.BytesIO()
-        f.write(img)
-        return np.array(Image.open(f))
-    
-    def decode_array(self, array):
-        return np.load(io.BytesIO(base64.b64decode(array)))
-        
+    def decode(self, arg):
+        if arg is None:
+            return
+            
+        try:
+            img = base64.b64decode(arg)
+            f = io.BytesIO()
+            f.write(img)
+            return np.array(Image.open(f))
+            
+        except:
+            return np.load(io.BytesIO(base64.b64decode(arg)))
+
     def publish(self, request):
-        arrays = self.decode_array(request.POST.get('arrays', ''))
-        color = self.decode_img(arrays['color'])
-        depth = self.decode_img(arrays['depth'])
-        coord = arrays['coord']
-        parameters = json.loads(request.POST.get("parameters"))
-        parameters['coord'] = coord
-        vis = self.encode_img(self.module(color, **parameters))
-        return self.encode_array(vis=vis)
+        color = self.decode(request.POST.get('color'))
+        depth = self.decode(request.POST.get('depth'))
+        coord = self.decode(request.POST.get('coord'))
+        cfg = json.loads(request.POST.get("cfg"))
+        vis = self.encode(self.module(color, **cfg))
+        return [vis]
         
     def __str__(self):
         return f"{self.title}: {self.user}"
