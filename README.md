@@ -38,9 +38,9 @@ import cv2
 
 # Parameters settings
 params = get_params()
-params.AUTH.URL = "http://140.112.13.4/aicore/upload/"
-params.AUTH.USERNAME = "aiis"
-params.AUTH.PASSWORD = "aiis"
+params.AUTH.URL = "http://www/aiis.net/"
+params.AUTH.USERNAME = "username"
+params.AUTH.PASSWORD = "password"
 
 # Poster establishment
 poster = Poster(params)
