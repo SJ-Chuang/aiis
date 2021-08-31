@@ -19,23 +19,23 @@ python3 -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/w
 ## Client Tools
 
 ```python
-from tools.client.config import get_cfg
-from tools.client.utils import Poster
+from aicore.client.params import get_params, ParamNode
+from aicore.client.utils import Poster
 import cv2
 
-# Set configurations
-cfg = get_cfg()
-cfg.AUTH.URL = "http://www.aiis.net"
-cfg.AUTH.USERNAME = "username"
-cfg.AUTH.PASSWORD = "password"
+# Parameters settings
+params = get_params()
+params.AUTH.URL = "http://140.112.13.4/aicore/upload/"
+params.AUTH.USERNAME = "aiis"
+params.AUTH.PASSWORD = "aiis"
 
-# Build a Poster
-poster = Poster(cfg)
+# Poster establishment
+poster = Poster(params)
 
-# Read an image
-image = cv2.imread('image.png')
+# Color image reading
+color = cv2.imread('aicore/modules/demo/color.png')
 
-# Send a post request to url
-poster.post(image)
+# Send a POST request to params.AUTH.URL
+poster.post(color)
 ```
 
