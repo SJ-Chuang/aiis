@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import User
+from .client.params import ParamNode
 from .modules import SpacingModule
 from .modules import utils
 from PIL import Image
@@ -41,8 +42,8 @@ class Post(models.Model):
         color = self.decode(request.POST.get('color'))
         depth = self.decode(request.POST.get('depth'))
         coord = self.decode(request.POST.get('coord'))
-        cfg = json.loads(request.POST.get("cfg"))
-        vis = self.encode(self.module(color, **cfg))
+        params = ParamNode(json.loads(request.POST.get("params")))
+        vis = self.encode(self.module(color, **params))
         return [vis]
         
     def __str__(self):

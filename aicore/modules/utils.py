@@ -38,7 +38,7 @@ def vis_prediction(background, prediction, metadata=None):
     out = visualizer.draw_instance_predictions(prediction["instances"].to("cpu"))
     return out.get_image()
 
-def vis_link(background, links, junc_color=(0, 0, 255), link_color=(0, 127, 0), coord=None):
+def vis_link(background, links, junc_color=(0, 0, 255), link_color=(0, 127, 0), coord=None, **kwarg):
     """
     Visualize links with background.
     Args:

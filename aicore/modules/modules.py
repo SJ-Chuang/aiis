@@ -20,7 +20,7 @@ class ModuleBase:
         self.name = name
         self._results = []
     
-    def __call__(self, color, depth=None, coord=None, **cfg):
+    def __call__(self, color, depth=None, coord=None, **params):
         """
         Sequentially apply transform an image to a dict with an actionable parameters.
         Args:
@@ -31,13 +31,13 @@ class ModuleBase:
         Returns:
             parameters (dict): a dict of inspection parameters.
         """
-        inputs = self.preprocessing(color, depth, coord, **cfg)
-        predictions = self.predict(inputs, **cfg)
-        parameters = self.calculate(predictions, **cfg)
-        visualization = self.visualize(color, parameters, coord, **cfg)
+        inputs = self.preprocessing(color, depth, coord, **params)
+        predictions = self.predict(inputs, **params)
+        parameters = self.calculate(predictions, **params)
+        visualization = self.visualize(color, parameters, coord, **params)
         return visualization
     
-    def predict(self, inputs, **cfg):
+    def predict(self, inputs, **params):
         """
         Args:
             inputs (np.ndarray): inputs of shape (H, W, C).
@@ -48,7 +48,7 @@ class ModuleBase:
         predictions = self.model(inputs)
         return predictions
     
-    def preprocessing(self, color, depth, coord, **cfg):
+    def preprocessing(self, color, depth, coord, **params):
         """
         Pre-processing the custom input image.
         Args:
@@ -59,12 +59,12 @@ class ModuleBase:
         Returns:
             A pre-processed inputs.
         """
-        format = cfg['INPUT']['FORMAT'] if cfg else 'BGR'
+        format = params['INPUT']['FORMAT'] if params else 'BGR'
         assert format in ['BGR', 'RGB'], f"Input format must be 'BGR' or 'RGB', not {format}"
         inputs = color[:,:,::-1] if format == "RGB" else color
         return inputs
     
-    def calculate(self, predictions, **cfg):
+    def calculate(self, predictions, **params):
         """
         Args:
             predictions (dict): the output of the model.
@@ -75,7 +75,7 @@ class ModuleBase:
         parameters = predictions
         return parameters
     
-    def visualize(self, background, parameters, coord=None, **cfg):
+    def visualize(self, background, parameters, coord=None, **params):
         """
         Args:
             background (np.ndarray): the background image.
@@ -130,10 +130,10 @@ class SpacingModule(ModuleBase):
         cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
         super().__init__(cfg, "SpacingModule")
     
-    def calculate(self, predictions, delta_e2j=30, delta_e2e=50, **cfg):
-        if cfg:
-            delta_e2j = cfg['MODULE']['SPACING_HEAD']['E2J_THRESH']
-            delta_e2e = cfg['MODULE']['SPACING_HEAD']['E2E_THRESH']
+    def calculate(self, predictions, delta_e2j=30, delta_e2e=50, **params):
+        if params:
+            delta_e2j = params['MODULE']['SPACING_HEAD']['E2J_THRESH']
+            delta_e2e = params['MODULE']['SPACING_HEAD']['E2E_THRESH']
         pred_masks = predictions['instances'].pred_masks
         pred_classes = predictions['instances'].pred_classes
         junctions = utils.find_centroid_by_mask(pred_masks[pred_classes==0])
@@ -145,8 +145,8 @@ class SpacingModule(ModuleBase):
             return_index=False).numpy().astype(int)
         return links
     
-    def visualize(self, background, links, coord=None, **cfg):
-        return utils.vis_link(background, links, coord=coord, **cfg)
+    def visualize(self, background, links, coord=None, **params):
+        return utils.vis_link(background, links, coord=coord, **params)
 
 @MODULE_REGISTRY.register()
 class HookAngleModule(ModuleBase):
@@ -162,7 +162,7 @@ class HookAngleModule(ModuleBase):
         
         super().__init__(cfg, "HookAngleModule")
     
-    def visualize(self, background, predictions, coord=None, **cfg):
+    def visualize(self, background, predictions, coord=None, **params):
         metadata = UserDict({'thing_classes': ["Unknown Angle", f"90{chr(176)}", f"135{chr(176)}", f"180{chr(176)}"]})
         return utils.vis_prediction(background, predictions, metadata)
 
@@ -179,6 +179,6 @@ class OverlapModule(ModuleBase):
         cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
         super().__init__(cfg, "OverlapModule")
     
-    def visualize(self, background, predictions, coord=None, **cfg):
+    def visualize(self, background, predictions, coord=None, **params):
         metadata = UserDict({'thing_classes': ["Edge", "Overlap"]})
         return utils.vis_prediction(background, predictions, metadata)
