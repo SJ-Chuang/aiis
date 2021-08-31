@@ -31,7 +31,7 @@ cd aiis
 The following is an example of sending a POST request to the specified URL.
 
 ```python
-from aicore.client.params import get_params, ParamNode
+from aicore.client.params import get_params
 from aicore.client.utils import Poster
 import cv2
 

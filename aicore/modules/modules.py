@@ -20,27 +20,29 @@ class ModuleBase:
         self.name = name
         self._results = []
     
-    def __call__(self, color, depth=None, coord=None, **params):
+    def __call__(self, color, depth=None, coord=None, params=None):
         """
-        Sequentially apply transform an image to a dict with an actionable parameters.
+        Sequentially apply transform an image to actionable parameters.
         Args:
             color (np.ndarray): a color image.
             depth (np.ndarray): a depth map.
             coord (np.ndarray): 3d coordinates.
+            params (ParamNode): ParamNodes for modules transformation.
             
         Returns:
-            parameters (dict): a dict of inspection parameters.
+            visualization (np.ndarray): visualization with inspection parameters.
         """
-        inputs = self.preprocessing(color, depth, coord, **params)
-        predictions = self.predict(inputs, **params)
-        parameters = self.calculate(predictions, **params)
-        visualization = self.visualize(color, parameters, coord, **params)
+        inputs = self.preprocessing(color, depth, coord, params=params)
+        predictions = self.predict(inputs, params=params)
+        parameters = self.calculate(predictions, params=params)
+        visualization = self.visualize(color, parameters, coord, params=params)
         return visualization
     
-    def predict(self, inputs, **params):
+    def predict(self, inputs, params=None):
         """
         Args:
             inputs (np.ndarray): inputs of shape (H, W, C).
+            params (ParamNode): ParamNodes for modules transformation.
 
         Returns:
             predictions (dict): the output of the model for one image only.
@@ -48,26 +50,28 @@ class ModuleBase:
         predictions = self.model(inputs)
         return predictions
     
-    def preprocessing(self, color, depth, coord, **params):
+    def preprocessing(self, color, depth, coord, params=None):
         """
         Pre-processing the custom input image.
         Args:
             color (np.ndarray): a color image.
             depth (np.ndarray): a depth map.
             coord (np.ndarray): 3d coordinates.
+            params (ParamNode): ParamNodes for modules transformation.
             
         Returns:
             A pre-processed inputs.
         """
-        format = params['INPUT']['FORMAT'] if params else 'BGR'
+        format = params.INPUT.FORMAT if params else 'BGR'
         assert format in ['BGR', 'RGB'], f"Input format must be 'BGR' or 'RGB', not {format}"
         inputs = color[:,:,::-1] if format == "RGB" else color
         return inputs
     
-    def calculate(self, predictions, **params):
+    def calculate(self, predictions, params=None):
         """
         Args:
             predictions (dict): the output of the model.
+            params (ParamNode): ParamNodes for modules transformation.
             
         Returns:
             parameters for inspection.
@@ -75,12 +79,13 @@ class ModuleBase:
         parameters = predictions
         return parameters
     
-    def visualize(self, background, parameters, coord=None, **params):
+    def visualize(self, background, parameters, coord=None, params=None):
         """
         Args:
             background (np.ndarray): the background image.
             parameters (dict): a dict of inspection parameters.
             coord (np.ndarray): 3d coordinates.
+            params (ParamNode): ParamNodes for modules transformation.
             
         Returns:
             vis (np.ndarray): parameter visualization.
@@ -89,7 +94,7 @@ class ModuleBase:
         return vis
 
 class ModuleList(ModuleBase):
-    def __init__(self, modules, cfg=None):
+    def __init__(self, modules):
         """
         Args:
             modules (List[ModuleBase or str]): a list of defined ModuleBase, i.e., [SpacingModule(cfg), "HookAngleModule"].
@@ -107,16 +112,27 @@ class ModuleList(ModuleBase):
         
         self.name = "ModuleList"
         
-    def __call__(self, color, depth=None, coord=None, **cfg):
+    def __call__(self, color, depth=None, coord=None, params=None):
+        """
+        Sequentially apply transform images to actionable parameters with given modules.
+        Args:
+            color (np.ndarray): a color image.
+            depth (np.ndarray): a depth map.
+            coord (np.ndarray): 3d coordinates.
+            params (ParamNode): ParamNodes for modules transformation.
+            
+        Returns:
+            visualization (np.ndarray): visualization with inspection parameters.
+        """
         parameters = []
         for module in self._modules:
-            inputs = module.preprocessing(color, depth, coord, **cfg)
-            predictions = module.predict(inputs, **cfg)
-            parameters.append(module.calculate(predictions, **cfg))
+            inputs = module.preprocessing(color, depth, coord, params=params)
+            predictions = module.predict(inputs, params=params)
+            parameters.append(module.calculate(predictions, params=params))
         
         visualization = color
-        for module, params in zip(self._modules, parameters):
-            visualization = module.visualize(visualization, params, coord, **cfg)
+        for module, parameter in zip(self._modules, parameters):
+            visualization = module.visualize(visualization, parameter, coord, params=params)
         
         return visualization
 
@@ -130,10 +146,11 @@ class SpacingModule(ModuleBase):
         cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
         super().__init__(cfg, "SpacingModule")
     
-    def calculate(self, predictions, delta_e2j=30, delta_e2e=50, **params):
+    def calculate(self, predictions, delta_e2j=30, delta_e2e=50, params=None):
         if params:
-            delta_e2j = params['MODULE']['SPACING_HEAD']['E2J_THRESH']
-            delta_e2e = params['MODULE']['SPACING_HEAD']['E2E_THRESH']
+            delta_e2j = params.MODULE.SPACING_HEAD.E2J_THRESH
+            delta_e2e = params.MODULE.SPACING_HEAD.E2E_THRESH
+        
         pred_masks = predictions['instances'].pred_masks
         pred_classes = predictions['instances'].pred_classes
         junctions = utils.find_centroid_by_mask(pred_masks[pred_classes==0])
@@ -145,8 +162,8 @@ class SpacingModule(ModuleBase):
             return_index=False).numpy().astype(int)
         return links
     
-    def visualize(self, background, links, coord=None, **params):
-        return utils.vis_link(background, links, coord=coord, **params)
+    def visualize(self, background, links, coord=None, params=None):
+        return utils.vis_link(background, links, coord=coord)
 
 @MODULE_REGISTRY.register()
 class HookAngleModule(ModuleBase):
@@ -162,7 +179,7 @@ class HookAngleModule(ModuleBase):
         
         super().__init__(cfg, "HookAngleModule")
     
-    def visualize(self, background, predictions, coord=None, **params):
+    def visualize(self, background, predictions, coord=None, params=None):
         metadata = UserDict({'thing_classes': ["Unknown Angle", f"90{chr(176)}", f"135{chr(176)}", f"180{chr(176)}"]})
         return utils.vis_prediction(background, predictions, metadata)
 
@@ -179,6 +196,6 @@ class OverlapModule(ModuleBase):
         cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
         super().__init__(cfg, "OverlapModule")
     
-    def visualize(self, background, predictions, coord=None, **params):
+    def visualize(self, background, predictions, coord=None, params=None):
         metadata = UserDict({'thing_classes': ["Edge", "Overlap"]})
         return utils.vis_prediction(background, predictions, metadata)

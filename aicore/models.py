@@ -3,11 +3,12 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import User
 from .client.params import ParamNode
-from .modules import SpacingModule
+from .modules import ModuleList
 from .modules import utils
+from datetime import datetime
 from PIL import Image
 import numpy as np
-import io, json, base64
+import os, io, cv2, json, base64
 
 class Post(models.Model):
     title = models.CharField(max_length=100, default="Post")
@@ -16,7 +17,8 @@ class Post(models.Model):
         on_delete=models.CASCADE
     )
     created_date = models.DateTimeField(default=timezone.now)
-    module = SpacingModule()
+    module = ModuleList(["SpacingModule", "HookAngleModule"])
+    base_dir = "/home/aiis"
     
     def encode(self, img):
         img = Image.fromarray(img)
@@ -36,14 +38,33 @@ class Post(models.Model):
             return np.array(Image.open(f))
             
         except:
-            return np.load(io.BytesIO(base64.b64decode(arg)))
-
+            return np.load(io.BytesIO(base64.b64decode(arg)))['data']
+    def save_frameset(self, color=None, depth=None, coord=None):
+        Date = datetime.strftime(datetime.now(), '%Y%m%d')
+        Time = datetime.strftime(datetime.now(), '%H%M%S')
+        save_dir = os.path.join(*[self.base_dir, self.user.username, Date])
+        os.umask(0)
+        os.makedirs(save_dir, mode=0o770, exist_ok=True)
+        
+        if isinstance(color, np.ndarray):
+            os.makedirs(os.path.join(save_dir, 'color'), exist_ok=True)
+            cv2.imwrite(os.path.join(*[save_dir, 'color', f'{Date}_{Time}.png']), color)
+        
+        if isinstance(depth, np.ndarray):
+            os.makedirs(os.path.join(save_dir, 'depth'), exist_ok=True)
+            cv2.imwrite(os.path.join(*[save_dir, 'depth', f'{Date}_{Time}.png']), depth)
+        
+        if isinstance(coord, np.ndarray):
+            os.makedirs(os.path.join(save_dir, 'coord'), exist_ok=True)
+            np.save(os.path.join(*[save_dir, 'coord', f'{Date}_{Time}']), coord)
+            
     def publish(self, request):
         color = self.decode(request.POST.get('color'))
         depth = self.decode(request.POST.get('depth'))
         coord = self.decode(request.POST.get('coord'))
+        self.save_frameset(color, depth, coord)
         params = ParamNode(json.loads(request.POST.get("params")))
-        vis = self.encode(self.module(color, **params))
+        vis = self.encode(self.module(color=color, depth=depth, coord=coord, params=params))
         return [vis]
         
     def __str__(self):

@@ -11,7 +11,7 @@ class Poster:
     
     def encode(self, *args):
         encodes = []
-        for arg in args:
+        for i, arg in enumerate(args):
             if type(arg)==np.ndarray:
                 if arg.dtype == np.uint8:
                     img = Image.fromarray(arg)
@@ -22,9 +22,9 @@ class Poster:
                     
                 else:
                     f = io.BytesIO()
-                    np.savez_compressed(f, arg)
-                    f.getvalue()
-                    encodes.append(base64.encodebytes())
+                    np.savez_compressed(f, data=arg)
+                    val = f.getvalue()
+                    encodes.append(base64.encodebytes(val))
                     
             else:
                 encodes.append(arg)
@@ -62,7 +62,7 @@ class Poster:
             else:
                 vis = self.decode(content)[0][:,:,::-1]
                 vis = Image.fromarray(vis)
-                vis.show()
+                return vis
                 
         else:
             print("Failed to upload")
