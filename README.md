@@ -18,6 +18,18 @@ python3 -m pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/w
 
 ## Client Tools
 
+Download the source code from git and move change the working directory.
+
+```shell
+git clone https://github.com/SJ-Chuang/aiis.git
+```
+
+```shell
+cd aiis
+```
+
+The following is an example of sending a POST request to the specified URL.
+
 ```python
 from aicore.client.params import get_params, ParamNode
 from aicore.client.utils import Poster
