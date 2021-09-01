@@ -53,6 +53,7 @@ coord = np.load('aicore/modules/demo/coord.npy')
 # Send a POST request to params.AUTH.URL
 vis = poster.post(color=color, depth=depth, coord=coord)
 
-vis.save("vis.png")
+if vis is not None:
+	vis.save("vis.png")
 ```
 
