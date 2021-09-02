@@ -6,3 +6,4 @@ env
 main.py
 depository
 private
+db.sqlite3

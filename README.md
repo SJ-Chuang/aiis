@@ -33,6 +33,7 @@ The following is an example of sending a POST request to the specified URL.
 ```python
 from aicore.client.params import get_params
 from aicore.client.utils import Poster
+from datetime import datetime
 import numpy as np
 import cv2
 
@@ -49,9 +50,10 @@ poster = Poster(params)
 color = cv2.imread('aicore/modules/demo/color.png')
 depth = cv2.imread('aicore/modules/demo/color.png')
 coord = np.load('aicore/modules/demo/coord.npy')
+date_time = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Send a POST request to params.AUTH.URL
-vis = poster.post(color=color, depth=depth, coord=coord)
+vis = poster.post(color=color, depth=depth, coord=coord, date_time=date_time)
 
 if vis is not None:
 	vis.save("vis.png")
