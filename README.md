@@ -50,10 +50,11 @@ poster = Poster(params)
 color = cv2.imread('aicore/modules/demo/color.png')
 depth = cv2.imread('aicore/modules/demo/color.png')
 coord = np.load('aicore/modules/demo/coord.npy')
-date_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+date = datetime.now().strftime("%Y%m%d")
+time = datetime.now().strftime("%H%M%S")
 
 # Send a POST request to params.AUTH.URL
-vis = poster.post(color=color, depth=depth, coord=coord, date_time=date_time)
+vis = poster.post(color=color, depth=depth, coord=coord, date=date, time=time)
 
 if vis is not None:
 	vis.save("vis.png")

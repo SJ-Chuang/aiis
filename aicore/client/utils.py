@@ -45,14 +45,14 @@ class Poster:
             decodes.append(arg)
         return decodes
         
-    def post(self, color, depth=None, coord=None, date_time=None):
+    def post(self, color, depth=None, coord=None, date=None, time=None):
         _color, _depth, _coord = self.encode(color, depth, coord)
         response = requests.post(
             self.url,
             data={
                 'username': self.username, 'password': self.password,
                 'color': _color, 'depth': _depth, 'coord': _coord,
-                'params': self.params, 'date_time': date_time
+                'params': self.params, 'date': date, 'time': time
             }
         )
         if response.ok:

@@ -39,13 +39,9 @@ class Post(models.Model):
             
         except:
             return np.load(io.BytesIO(base64.b64decode(arg)))['data']
-    def save_frameset(self, color=None, depth=None, coord=None, date_time=None):
-        if date_time is None:
-            Date = datetime.strftime(datetime.now(), '%Y%m%d')
-            Time = datetime.strftime(datetime.now(), '%H%M%S')
-        else:
-            Date = date_time.split('_')[0]
-            Time = date_time.split('_')[-1]
+    def save_frameset(self, color=None, depth=None, coord=None, date=None, time=None):
+        Date = datetime.strftime(datetime.now(), '%Y%m%d') if date is None else date
+        Time = datetime.strftime(datetime.now(), '%H%M%S') if time is None else time
         
         save_dir = os.path.join(*[self.base_dir, self.user.username, Date])
         os.umask(0)
@@ -67,8 +63,9 @@ class Post(models.Model):
         color = self.decode(request.POST.get('color'))
         depth = self.decode(request.POST.get('depth'))
         coord = self.decode(request.POST.get('coord'))
-        date_time = request.POST.get('date_time')
-        self.save_frameset(color, depth, coord, date_time)
+        date = request.POST.get('date')
+        time = request.POST.get('time')
+        self.save_frameset(color, depth, coord, date, time)
         params = ParamNode(json.loads(request.POST.get("params")))
         vis = self.encode(self.module(color=color, depth=depth, coord=coord, params=params))
         return [vis]
