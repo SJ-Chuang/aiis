@@ -57,6 +57,6 @@ time = datetime.now().strftime("%H%M%S")
 vis = poster.post(color=color, depth=depth, coord=coord, date=date, time=time)
 
 if vis is not None:
-	vis.save("vis.png")
+    vis.save("vis.png")
 ```
 
