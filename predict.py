@@ -3,7 +3,9 @@ import numpy as np
 from tqdm import tqdm
 import os, cv2
 
-base_dir = "/home/aiis/aiis/20210903/"
+# base_dir = "/home/aiis/aiis/20210903/"
+
+base_dir = "aicore/modules/demo/20210903"
 
 os.makedirs(os.path.join(base_dir, 'vis'), exist_ok=True)
 

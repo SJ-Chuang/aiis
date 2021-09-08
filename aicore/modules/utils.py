@@ -111,7 +111,7 @@ def find_endpoint_by_mask(masks, return_linemasks=True):
         return torch.tensor(endpoints), masks[linemask_indices]
     return torch.tensor(endpoints)
 
-def find_nearest_link(juncs, lines, line_masks=None,
+def find_nearest_link(juncs, lines, line_masks,
         max_e2j_dist=30, max_e2e_dist=50, path_thred=0.5, e2e_on=True, return_index=True):
     """
     Find the links between junctions and lines.
@@ -142,6 +142,7 @@ def find_nearest_link(juncs, lines, line_masks=None,
                 return intersection
         
     links = []
+    nL, h, w = line_masks.shape
     for l, line in enumerate(lines):
         # E2J link prediction
         e2j_dist_matrix = cdist(line, juncs, metric='euclidean')
@@ -151,6 +152,7 @@ def find_nearest_link(juncs, lines, line_masks=None,
                 length = torch.linalg.norm(juncs[i]-juncs[j]).int()
                 x = torch.linspace(juncs[i][0], juncs[j][0], length).long()
                 y = torch.linspace(juncs[i][1], juncs[j][1], length).long()
+                
                 if line_masks[l, y, x].sum() / length < path_thred:
                     continue
                     
@@ -166,7 +168,8 @@ def find_nearest_link(juncs, lines, line_masks=None,
             if e2j_dist_matrix[0, i] < max_e2j_dist:
                 for ej in np.where((0 < dist_ej) & (dist_ej < max_e2e_dist))[0]:
                     intersection = line_line_intersection(line, lines[ej // 2, [1 - ej % 2, ej % 2]])
-                    if intersection is not None:
+                    if intersection is not None: x, y = intersection
+                    if intersection is not None and x in range(0, w) and y in range(0, h):
                         juncs = torch.cat([juncs, intersection.unsqueeze(0)], 0)
                         if return_index:
                             links.append([i, len(juncs)-1])
@@ -178,7 +181,8 @@ def find_nearest_link(juncs, lines, line_masks=None,
             elif e2j_dist_matrix[1, j] < max_e2j_dist:
                 for ei in np.where((0 < dist_ei) & (dist_ei < max_e2e_dist))[0]:
                     intersection = line_line_intersection(line[[1, 0]], lines[ei // 2, [1 - ei % 2, ei % 2]])
-                    if intersection is not None:
+                    if intersection is not None: x, y = intersection
+                    if intersection is not None and x in range(0, w) and y in range(0, h):
                         juncs = torch.cat([juncs, intersection.unsqueeze(0)], 0)
                         if return_index:
                             links.append([j, len(juncs)-1])
@@ -190,13 +194,15 @@ def find_nearest_link(juncs, lines, line_masks=None,
                 link = []
                 for ej in np.where((0 < dist_ej) & (dist_ej < max_e2e_dist))[0]:
                     intersection = line_line_intersection(line, lines[ej // 2, [1 - ej % 2, ej % 2]])
-                    if intersection is not None:
+                    if intersection is not None: x, y = intersection
+                    if intersection is not None and x in range(0, w) and y in range(0, h):
                         juncs = torch.cat([juncs, intersection.unsqueeze(0)], 0)
                         link.append(len(juncs)-1)
                         break
                 for ei in np.where((0 < dist_ei) & (dist_ei < max_e2e_dist))[0]:
                     intersection = line_line_intersection(line[[1, 0]], lines[ei // 2, [1 - ei % 2, ei % 2]])
-                    if intersection is not None:
+                    if intersection is not None: x, y = intersection
+                    if intersection is not None and x in range(0, w) and y in range(0, h):
                         juncs = torch.cat([juncs, intersection.unsqueeze(0)], 0)
                         link.append(len(juncs)-1)
                         break
@@ -205,6 +211,7 @@ def find_nearest_link(juncs, lines, line_masks=None,
                         links.append(link)
                     else:
                         links.append(juncs[link].numpy().tolist())
+    
     if return_index:
         return juncs, torch.tensor(links)
         
