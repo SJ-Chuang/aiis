@@ -1,7 +1,7 @@
 import os, cv2, argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--input_dir', required=True)
+parser.add_argument('input_dir', type=str, help='path to a directory of images.')
 parser.add_argument('--fps', type=float, default=15.0)
 parser.add_argument('-o', '--savename', help='path to save .mp4 file.', default=None)
 args = parser.parse_args()

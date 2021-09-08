@@ -7,3 +7,4 @@ main.py
 depository
 private
 db.sqlite3
+predict.py

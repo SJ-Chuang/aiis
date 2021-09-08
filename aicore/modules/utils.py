@@ -145,6 +145,8 @@ def find_nearest_link(juncs, lines, line_masks,
     nL, h, w = line_masks.shape
     for l, line in enumerate(lines):
         # E2J link prediction
+        if len(line) == 0 or len(juncs) == 0:
+            break
         e2j_dist_matrix = cdist(line, juncs, metric='euclidean')
         i, j = e2j_dist_matrix.argsort(1)[:,0]
         if i != j and e2j_dist_matrix[0, i] < max_e2j_dist and e2j_dist_matrix[1, j] < max_e2j_dist:
